@@ -1,0 +1,68 @@
+---
+output: html_document
+---
+
+
+This application is to calcualte the age you can retire and the values of accumulated asset and total future cost then.
+
+Please update all the inputs on the left panel and then click Calculate button. If you are not sure about the expected inflation rate or other assumptions, the default values are good starting points.
+
+The accumulated asset value increases and the total future cost decreases by time as the chart below. When the acculumated asset value is bigger than the future living cost, you can retire.
+
+
+
+```{r, echo=FALSE}
+library(ggplot2)
+expected <- 80
+current <- 35
+currentyrsa <- 80000
+savingra <- 0.25
+currentwealth <- 50000
+inflation <- 0.02
+salaryincrease <- 0.03
+ROA <- 0.04
+taxrate <- 0.25
+
+
+x <- expected-current+1
+
+  age <- vector("numeric", length = x)
+  salary <- vector("numeric", length = x)
+  saving <- vector("numeric", length = x)
+  AVsaving <- vector("numeric", length = x)
+  cost <- vector("numeric", length = x)
+  PVcost <- vector("numeric", length = x)
+  RTage <- vector("numeric", length = x)
+  
+  
+  age[1]<-current
+  AVsaving[1] = currentyrsa*savingra+currentwealth
+  cost[1] <- currentyrsa*(1-taxrate-savingra)
+  PVcost[1]= cost[1]*(expected-age[1])
+  RTage[1:x] <-expected
+  
+  
+  for(t in 2:x) {
+    age[t]=age[t-1]+1
+    salary[t]=currentyrsa*(1+salaryincrease)^(t-1)
+    saving[t]=salary[t]*savingra
+    AVsaving[t]=AVsaving[t-1]*(1+ROA)+saving[t]
+    cost[t]=cost[1]*(1+inflation)^(t-1)
+    PVcost[t]=cost[t]*(expected-age[t])
+    if (AVsaving[t]>=PVcost[t]) {
+      RTage[t]=age[t]
+    }
+          age
+          RTage
+          answer <- (min(RTage))
+          RTasset <- AVsaving[answer-current+1]
+          RTcost<- PVcost[answer-current+1]
+  }
+
+          ggplot() +labs(title="Accumulated Wealth vs. Future Living Cost") + labs(x="age", y="Amount ($)") +
+                    geom_line(aes(x=age,y = AVsaving, colour = "Acumulated Wealth")) +
+                    geom_line(aes(x=age,y = PVcost, colour = "Future Living Cost")) +
+                    geom_vline(aes(xintercept=answer,colour="Retirement Age")) +
+                    scale_colour_manual("", values = c("Acumulated Wealth"="blue", "Future Living Cost"="red","Retirement Age"="black"))
+                    
+```
